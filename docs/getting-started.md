@@ -24,7 +24,7 @@ src/
 │   ├── Footer.astro    # Footer component
 │   └── FooterExamples.astro
 ├── layouts/            # Page layouts
-│   └── Layout.astro    # Main layout with footer
+│   └── DefaultLayout.astro # Main layout with footer
 ├── pages/              # Astro pages (file-based routing)
 │   ├── index.astro     # Home page
 │   └── 404.astro       # 404 error page
@@ -39,7 +39,7 @@ src/
 
 ### 1. Update Company Information
 
-Edit `src/layouts/Layout.astro` to customize the footer for your project:
+Edit `src/layouts/DefaultLayout.astro` to customize the footer for your project:
 
 ```astro
 <Footer
@@ -52,15 +52,9 @@ Edit `src/layouts/Layout.astro` to customize the footer for your project:
 
 ### 2. Customize Colors
 
-Update the color tokens in `src/styles/global.css`:
-
-```css
-@theme {
-  --color-primary: oklch(0.78 0.1687 65.71); /* Your primary color */
-  --color-accent: oklch(0.51 0.196 22.53); /* Your accent color */
-  --color-secondary: oklch(0.34 0.1251 330.49); /* Your secondary color */
-}
-```
+Update the tokens in the `@theme` block of
+[global.css](../src/styles/global.css). That file defines the current palette;
+see the [color guide](./color-guidelines.md) for token usage.
 
 ### 3. Add Your Content
 
@@ -68,16 +62,18 @@ Replace the content in `src/pages/index.astro` with your own:
 
 ```astro
 ---
-import Layout from "@layouts/Layout.astro";
+import DefaultLayout from "@layouts/DefaultLayout.astro";
 ---
 
-<Layout>
-  <main class="container mx-auto px-4 py-8">
+<DefaultLayout>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-h1">Welcome to Your Project</h1>
     <p class="text-lead">Your amazing content goes here!</p>
-  </main>
-</Layout>
+  </div>
+</DefaultLayout>
 ```
+
+`DefaultLayout` already provides the page's `<main>` element.
 
 ## 🧩 Using Components
 
@@ -115,7 +111,10 @@ import Button from "@components/ui/Button.astro";
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run astro ...` - Run Astro CLI commands
+- `npm run astro -- ...` - Run Astro CLI commands
+
+The build does not perform full TypeScript checking. This starter has no
+configured typecheck, lint, or automated test script.
 
 ## 🎯 Design System
 
@@ -124,13 +123,16 @@ This starter uses a modern design system with:
 - **OKLCH Colors** - Perceptually uniform color space
 - **Fluid Typography** - Responsive text sizing
 - **Semantic Classes** - Meaningful class names
-- **Accessibility First** - WCAG compliant components
+- **Accessibility First** - Semantic HTML and keyboard interaction patterns
+
+Read the [UI conventions](./coding-standards.md) before changing components,
+layouts, or styles.
 
 ### Typography Classes
 
 - `text-h1` through `text-h6` - Heading styles
 - `text-lead` - Lead paragraph
-- `text-base` - Body text
+- `text-p` - Fluid body text
 - `text-small` - Small text
 - `text-quote` - Quote text
 
@@ -146,28 +148,18 @@ This starter uses a modern design system with:
 
 ### TypeScript
 
-The project uses TypeScript with path aliases configured in `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": { "@*": ["src/*"] }
-  }
-}
-```
+The project uses TypeScript with path aliases defined in
+[tsconfig.json](../tsconfig.json). Use those configured aliases, such as
+`@components/ui/Button.astro` and `@layouts/DefaultLayout.astro`.
 
 ### Astro Configuration
 
-Edit `astro.config.mjs` to customize Astro settings:
+Edit [astro.config.mjs](../astro.config.mjs) to customize Astro settings.
+It configures Tailwind through the `@tailwindcss/vite` plugin.
 
-```javascript
-import { defineConfig } from "astro/config";
-
-export default defineConfig({
-  // Your Astro configuration
-});
-```
+When consulting Astro guides or API references, use documentation for the major
+version declared in [package.json](../package.json). Start with the
+[official Astro docs](https://docs.astro.build/).
 
 ## 📚 Next Steps
 

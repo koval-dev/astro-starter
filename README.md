@@ -73,8 +73,12 @@ All commands are run from the root of the project, from a terminal:
 | `npm run dev`             | Starts local dev server at `localhost:4321`      |
 | `npm run build`           | Build your production site to `./dist/`          |
 | `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- ...`    | Run Astro CLI commands                           |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
+
+`npm run build` builds the site without full TypeScript checking. A separate
+`astro check` setup requires the optional `@astrojs/check` and TypeScript
+dependencies; it is not configured in this starter.
 
 ## 🎨 Design System
 

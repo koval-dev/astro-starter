@@ -7,10 +7,11 @@ Welcome to the documentation for the Astro Starter project. This guide covers al
 ```
 docs/
 ├── README.md              # This file - main documentation index
+├── coding-standards.md    # UI conventions and verification
+├── color-guidelines.md    # Color usage guide
 ├── components/            # Component documentation
-│   ├── footer.md         # Footer component documentation
-│   └── button.md         # Button component documentation (coming soon)
-└── getting-started.md    # Getting started guide (coming soon)
+│   └── footer.md          # Footer component documentation
+└── getting-started.md     # Getting started guide
 ```
 
 ## 🧩 Components
@@ -43,13 +44,19 @@ This starter includes a comprehensive design system with:
 
 When adding new components to this starter:
 
-1. Create the component in `src/components/`
-2. Add TypeScript interfaces in `src/types/`
-3. Create documentation in `docs/components/`
-4. Update this README with links to new documentation
+1. Read the [UI conventions](./coding-standards.md).
+2. Create the component in `src/components/`, reusing shared prop contracts
+   from `src/types/` where applicable.
+3. Create documentation for its public API in `docs/components/`.
+4. Update this index with links to new documentation.
+
+Shared AI instructions live in [AGENTS.md](../AGENTS.md). Keep tool-specific
+entry points focused on that file.
 
 ## 🔗 Quick Links
 
 - [Project README](../README.md) - Main project overview
+- [UI Conventions](./coding-standards.md) - Component, styling, and verification rules
+- [Color Guidelines](./color-guidelines.md) - Color token usage
 - [Source Code](../src/) - Component source files
 - [Type Definitions](../src/types/) - TypeScript interfaces

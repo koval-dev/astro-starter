@@ -39,8 +39,8 @@ import Footer from "@components/Footer.astro";
 | `email`             | `string`       | `undefined`      | Email address               |
 | `website`           | `string`       | `undefined`      | Website URL                 |
 | `logo`              | `any`          | `undefined`      | Custom logo component       |
-| `backgroundColor`   | `string`       | `"bg-accent"`    | Footer background color     |
-| `textColor`         | `string`       | `"text-white"`   | Footer text color           |
+| `backgroundColor`   | `string`       | `"bg-dark"`      | Footer background color     |
+| `textColor`         | `string`       | `"text-light"`   | Footer text color           |
 | `showSocial`        | `boolean`      | `false`          | Show social media links     |
 | `socialLinks`       | `SocialLink[]` | `[]`             | Array of social media links |
 | `additionalContent` | `any`          | `undefined`      | Additional footer content   |
@@ -86,7 +86,7 @@ import Footer from "@components/Footer.astro";
 
 ## Integration with Layout
 
-The footer is automatically included in the main layout. To customize it for your project, update the props in `src/layouts/Layout.astro`:
+The footer is automatically included in the main layout. To customize it for your project, update the props in `src/layouts/DefaultLayout.astro`:
 
 ```astro
 <Footer
@@ -109,6 +109,6 @@ The footer is automatically included in the main layout. To customize it for you
 The footer component uses your project's design tokens:
 
 - Uses `text-small` for typography
-- Uses `bg-accent` for background color
+- Uses `bg-dark` for background color and `text-light` for text by default
 - Responsive spacing with Tailwind utilities
 - Follows the established color scheme
