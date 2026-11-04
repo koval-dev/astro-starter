@@ -10,25 +10,24 @@ permissions: {}
 concurrency: upgrade-astro
 
 jobs:
-  upgrade:
+  check:
     # This file ships with the template. Never run in scaffolded projects.
     if: github.repository == 'koval-dev/astro-starter'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     permissions:
-      contents: write # commit to main, create tag and release
+      contents: read
       issues: write # open the major-version issue
+    outputs:
+      latest: ${{ steps.decide.outputs.latest }}
+      proceed: ${{ steps.decide.outputs.proceed }}
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false # keep the token away from npm install scripts
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
+          persist-credentials: false
 
       - name: Decide what to do
-        id: check
+        id: decide
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -52,20 +51,76 @@ jobs:
 
           echo "proceed=true" >> "$GITHUB_OUTPUT"
 
+  build:
+    # Runs third-party code, so it gets no write access. Only the lockfile leaves this job.
+    needs: check
+    if: needs.check.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
       - name: Upgrade and build
-        if: steps.check.outputs.proceed == 'true'
         env:
-          LATEST: ${{ steps.check.outputs.latest }}
+          LATEST: ${{ needs.check.outputs.latest }}
         run: |
           npm install "astro@$LATEST"
           npm version "$LATEST" --no-git-tag-version --allow-same-version
           npm run build
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lockfile
+          path: package-lock.json
+          retention-days: 1
+
+  release:
+    # Holds the write token, so it must never install or run npm code.
+    needs: [check, build]
+    if: needs.check.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # commit to main, create tag and release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: lockfile
+          path: ${{ runner.temp }}/lockfile
+
+      - name: Apply the upgrade
+        env:
+          LATEST: ${{ needs.check.outputs.latest }}
+          LOCKFILE: ${{ runner.temp }}/lockfile/package-lock.json
+        run: |
+          # The lockfile comes from the build job, so trust nothing outside the npm registry.
+          resolved=$(jq -r '.packages[].resolved // empty' "$LOCKFILE")
+          if printf '%s\n' "$resolved" | grep -v '^https://registry\.npmjs\.org/'; then
+            echo "Lockfile has a package from outside the npm registry"
+            exit 1
+          fi
+          cp "$LOCKFILE" package-lock.json
+
+          # Rebuilt here, not taken from the build job, so it can't gain scripts or dependencies.
+          jq --arg v "$LATEST" '.version = $v | .dependencies.astro = "^" + $v' package.json > package.json.new
+          mv package.json.new package.json
+
       - name: Commit and release
-        if: steps.check.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          LATEST: ${{ steps.check.outputs.latest }}
+          LATEST: ${{ needs.check.outputs.latest }}
         run: |
           gh auth setup-git
           git config user.name "github-actions[bot]"
