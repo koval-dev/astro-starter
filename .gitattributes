@@ -1,0 +1,2 @@
+.github/workflows/upgrade-astro.yml export-ignore
+.gitattributes export-ignore

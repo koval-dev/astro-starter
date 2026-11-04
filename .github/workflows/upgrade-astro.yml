@@ -1,0 +1,78 @@
+name: Upgrade Astro
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # daily, 06:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency: upgrade-astro
+
+jobs:
+  upgrade:
+    # This file ships with the template. Never run in scaffolded projects.
+    if: github.repository == 'koval-dev/astro-starter'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # commit to main, create tag and release
+      issues: write # open the major-version issue
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false # keep the token away from npm install scripts
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Decide what to do
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(npm view astro version)
+          current=$(node -p "require('./package-lock.json').packages['node_modules/astro'].version")
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+          if gh release view "v$latest" >/dev/null 2>&1; then
+            echo "v$latest is already released"
+            exit 0
+          fi
+
+          if [ "${latest%%.*}" -gt "${current%%.*}" ]; then
+            title="Upgrade to Astro ${latest%%.*}"
+            count=$(gh issue list --state all --search "\"$title\" in:title" --json number --jq length)
+            if [ "$count" -eq 0 ]; then
+              gh issue create --title "$title" --body "Astro $latest is out. Majors are not auto-released: upgrade by hand using https://docs.astro.build/en/upgrade-astro/. Daily auto-release resumes once main is on this major."
+            fi
+            exit 0
+          fi
+
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upgrade and build
+        if: steps.check.outputs.proceed == 'true'
+        env:
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          npm install "astro@$LATEST"
+          npm version "$LATEST" --no-git-tag-version --allow-same-version
+          npm run build
+
+      - name: Commit and release
+        if: steps.check.outputs.proceed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          gh auth setup-git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git diff --cached --quiet || git commit -m "upg Astro v$LATEST"
+          git push origin HEAD:main
+          gh release create "v$LATEST" --target "$(git rev-parse HEAD)" \
+            --title "Astro $LATEST" \
+            --notes "Upgrades the starter to Astro $LATEST. Changes: https://github.com/withastro/astro/releases/tag/astro%40$LATEST"
