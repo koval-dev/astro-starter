@@ -32,6 +32,26 @@ Use these conventions when changing components, layouts, or styles.
 - Match the existing icon style. Inline SVGs and reusable SVG components are
   supported; select an icon library only when the task requires one.
 
+## Inline text spacing
+
+Astro 7 uses JSX whitespace handling by default. When prose spans source lines
+at an expression or inline element boundary, use an explicit `{" "}` wherever
+the rendered text needs a separating space:
+
+```astro
+&copy; {currentYear}{" "}
+{companyName}. All rights reserved.
+
+<p>
+  Use the{" "}
+  <code>text-lead</code> utility.
+</p>
+```
+
+Check the rendered text after formatting; indentation and source newlines do
+not reliably provide word separators. See the [whitespace findings](astro-whitespace.md)
+and [Astro v7 migration guide](https://docs.astro.build/en/guides/upgrade-to/v7/#new-default-whitespace-handling-compresshtml-jsx).
+
 ## UI verification
 
 For changed UI, inspect the affected pages at narrow and wide viewport widths.

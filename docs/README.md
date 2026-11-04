@@ -8,6 +8,7 @@ Welcome to the documentation for the Astro Starter project. This guide covers al
 docs/
 ├── README.md              # This file - main documentation index
 ├── coding-standards.md    # UI conventions and verification
+├── astro-whitespace.md    # Astro 7 whitespace change and inline text guidance
 ├── color-guidelines.md    # Color usage guide
 ├── components/            # Component documentation
 │   └── footer.md          # Footer component documentation
@@ -57,6 +58,7 @@ entry points focused on that file.
 
 - [Project README](../README.md) - Main project overview
 - [UI Conventions](./coding-standards.md) - Component, styling, and verification rules
+- [Astro Whitespace](./astro-whitespace.md) - Astro 7 rendering change and explicit inline spaces
 - [Color Guidelines](./color-guidelines.md) - Color token usage
 - [Source Code](../src/) - Component source files
 - [Type Definitions](../src/types/) - TypeScript interfaces
