@@ -52,7 +52,8 @@ jobs:
           echo "proceed=true" >> "$GITHUB_OUTPUT"
 
   build:
-    # Runs third-party code, so it gets no write access. Only the lockfile leaves this job.
+    # Runs third-party code, so it gets no write access and nothing leaves this job.
+    # Its only effect is passing or failing, which gates the release.
     needs: check
     if: needs.check.outputs.proceed == 'true'
     runs-on: ubuntu-latest
@@ -72,18 +73,14 @@ jobs:
         env:
           LATEST: ${{ needs.check.outputs.latest }}
         run: |
-          npm install "astro@$LATEST"
-          npm version "$LATEST" --no-git-tag-version --allow-same-version
+          # Same resolve as the release job, so this tests the lockfile it will commit.
+          npm install "astro@$LATEST" --package-lock-only --ignore-scripts
+          npm ci
           npm run build
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: lockfile
-          path: package-lock.json
-          retention-days: 1
-
   release:
-    # Holds the write token, so it must never install or run npm code.
+    # Holds the write token, so it must never run package code. Packages are
+    # resolved here without being installed, and nothing is taken from the build job.
     needs: [check, build]
     if: needs.check.outputs.proceed == 'true'
     runs-on: ubuntu-latest
@@ -95,27 +92,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/setup-node@v7
         with:
-          name: lockfile
-          path: ${{ runner.temp }}/lockfile
+          node-version: 24
 
       - name: Apply the upgrade
         env:
           LATEST: ${{ needs.check.outputs.latest }}
-          LOCKFILE: ${{ runner.temp }}/lockfile/package-lock.json
         run: |
-          # The lockfile comes from the build job, so trust nothing outside the npm registry.
-          resolved=$(jq -r '.packages[].resolved // empty' "$LOCKFILE")
-          if printf '%s\n' "$resolved" | grep -v '^https://registry\.npmjs\.org/'; then
-            echo "Lockfile has a package from outside the npm registry"
-            exit 1
-          fi
-          cp "$LOCKFILE" package-lock.json
-
-          # Rebuilt here, not taken from the build job, so it can't gain scripts or dependencies.
-          jq --arg v "$LATEST" '.version = $v | .dependencies.astro = "^" + $v' package.json > package.json.new
-          mv package.json.new package.json
+          npm install "astro@$LATEST" --package-lock-only --ignore-scripts
+          npm version "$LATEST" --no-git-tag-version --allow-same-version --ignore-scripts
 
       - name: Commit and release
         env:
